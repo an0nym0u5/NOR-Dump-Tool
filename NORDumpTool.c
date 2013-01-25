@@ -74,6 +74,10 @@ enum TOCnames {
     FlashStart,
     FlashFormat,
     FlashRegion,
+    CRL1,
+    CRL2,
+    DRL1,
+    DRL2,
     TotalSections
 };
 
@@ -110,10 +114,14 @@ static struct Sections SectionTOC[] = {
     { "FlashStart",       0x000000, 0x0200,   0, 0, NULL },
     { "FlashFormat",      0x000200, 0x0200,   0, 0, NULL },
     { "FlashRegion",      0x000400, 0x0400,   0, 0, NULL },
+    { "CRL1",             0xF40000, 0x20000,  0, 0, NULL },
+    { "DRL1",             0xF60000, 0x20000,  0, 0, NULL },
+    { "CRL2",             0xF80000, 0x20000,  0, 0, NULL },
+    { "DRL2",             0xFA0000, 0x20000,  0, 0, NULL },
     { NULL, 0, 0, 0, 0, NULL }
 };
 
-struct IndividualSystemData{
+struct IndividualSystemData {
     char *IDPSTargetID;    // 0x02F077 (NOR) 0x80877 (NAND)
     char *SKU;             //
     char *metldrOffset0;   // 0x081E (NOR) 0x4081E (NAND)
@@ -443,22 +451,22 @@ int CheckPerConsoleData ( FILE *fd ) {
         { "EID5 static        ", SectionTOC[eEID].Offset + 0x13E0,            0x04, TYPE_HEX  + DISPLAY_ALWAYS,   1, "00120730" },
         { "EID5 pcn           ", SectionTOC[eEID].Offset + 0x13E4,            0x0B, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
         { "PS3 MAC Address    ", SectionTOC[cISD].Offset + 0x40,              0x06, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
-        { "cISD1 Magic Number ", SectionTOC[cISD].Offset + 0x60,              0x04, TYPE_HEX  + DISPLAY_FAIL, 1, "7F49444C" },
+        { "cISD1 Magic Number ", SectionTOC[cISD].Offset + 0x60,              0x04, TYPE_HEX  + DISPLAY_FAIL,     1, "7F49444C" },
         { "cISD1 -        CID ", SectionTOC[cISD].Offset + 0x6C,              0x04, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
-        { "cISD1 -       eCID ", SectionTOC[cISD].Offset + 0x70,              0x20, TYPE_ASCII + DISPLAY_ALWAYS,   0, NULL },
-        { "cISD1 -   board_id ", SectionTOC[cISD].Offset + 0x90,              0x08, TYPE_ASCII + DISPLAY_ALWAYS,   0, NULL },
-        { "cISD1 -   kiban_id ", SectionTOC[cISD].Offset + 0x98,              0x0c, TYPE_ASCII + DISPLAY_ALWAYS,   0, NULL },
+        { "cISD1 -       eCID ", SectionTOC[cISD].Offset + 0x70,              0x20, TYPE_ASCII + DISPLAY_ALWAYS,  0, NULL },
+        { "cISD1 -   board_id ", SectionTOC[cISD].Offset + 0x90,              0x08, TYPE_ASCII + DISPLAY_ALWAYS,  0, NULL },
+        { "cISD1 -   kiban_id ", SectionTOC[cISD].Offset + 0x98,              0x0c, TYPE_ASCII + DISPLAY_ALWAYS,  0, NULL },
         { "cISD1 -0x3F0A4 Data", SectionTOC[cISD].Offset + 0xA4,              0x06, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
         { "cISD1 -0x3F0B0 Data", SectionTOC[cISD].Offset + 0xB0,              0x08, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
         { "cISD1 - ckp_mgt_id ", SectionTOC[cISD].Offset + 0xB8,              0x08, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
         { "cvtrm - pck/puk    ", SectionTOC[cvtrm].Offset + 0x1D748,          0x14, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
-        { "HDD information    ", SectionTOC[CELL_EXTNOR_AREA].Offset + 0x204, 0x1C, TYPE_ASCII + DISPLAY_ALWAYS,   0, NULL },
-        { "PS3 Serial Number  ", SectionTOC[CELL_EXTNOR_AREA].Offset + 0x230, 0x10, TYPE_ASCII + DISPLAY_ALWAYS,   0, NULL },
+        { "HDD information    ", SectionTOC[CELL_EXTNOR_AREA].Offset + 0x204, 0x1C, TYPE_ASCII + DISPLAY_ALWAYS,  0, NULL },
+        { "PS3 Serial Number  ", SectionTOC[CELL_EXTNOR_AREA].Offset + 0x230, 0x10, TYPE_ASCII + DISPLAY_ALWAYS,  0, NULL },
         { "Bootldr hdr and rev", SectionTOC[bootldr].Offset,                  0x10, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
         { "Bootldr hdr and pcn", SectionTOC[bootldr].Offset + 0x10,           0x10, TYPE_HEX  + DISPLAY_ALWAYS,   0, NULL },
-        { "cvtrm SCEI magicnbr", SectionTOC[cvtrm].Offset,                    0x04, TYPE_HEX  + DISPLAY_FAIL, 1, "53434549" },
-        { "cvtrm hdr          ", SectionTOC[cvtrm].Offset + 0x004004,         0x04, TYPE_HEX  + DISPLAY_FAIL, 1, "5654524D" },
-        { "cvtrm hdr bis      ", SectionTOC[cvtrm].Offset + 0x024004,         0x04, TYPE_HEX  + DISPLAY_FAIL, 1, "5654524D" },
+        { "cvtrm SCEI magicnbr", SectionTOC[cvtrm].Offset,                    0x04, TYPE_HEX  + DISPLAY_FAIL,     1, "53434549" },
+        { "cvtrm hdr          ", SectionTOC[cvtrm].Offset + 0x004004,         0x04, TYPE_HEX  + DISPLAY_FAIL,     1, "5654524D" },
+        { "cvtrm hdr bis      ", SectionTOC[cvtrm].Offset + 0x024004,         0x04, TYPE_HEX  + DISPLAY_FAIL,     1, "5654524D" },
         { NULL, 0, 0, 0, 0, NULL }
     };
 
@@ -467,13 +475,13 @@ int CheckPerConsoleData ( FILE *fd ) {
     printf ( "******************************\n" );
 
     while ( SectionPerConsole[i].name != NULL ) {
-        ret= ret | ReadSection ( SectionPerConsole[i].name,
-                                 fd,
-                                 SectionPerConsole[i].Offset,
-                                 SectionPerConsole[i].Size,
-                                 SectionPerConsole[i].DisplayType,
-                                 SectionPerConsole[i].Check,
-                                 SectionPerConsole[i].Pattern );
+        ret |= ReadSection ( SectionPerConsole[i].name,
+                             fd,
+                             SectionPerConsole[i].Offset,
+                             SectionPerConsole[i].Size,
+                             SectionPerConsole[i].DisplayType,
+                             SectionPerConsole[i].Check,
+                             SectionPerConsole[i].Pattern );
         i++;
     }
 
