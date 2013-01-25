@@ -406,13 +406,13 @@ int CheckGenericData ( FILE *fd ) {
     printf ( "*        Generic Data        *\n" );
     printf ( "******************************\n" );
     while ( SectionGenericData[cur].name != NULL ) {
-        ret = ret | ReadSection ( SectionGenericData[cur].name,
-                                  fd,
-                                  SectionGenericData[cur].Offset,
-                                  SectionGenericData[cur].Size,
-                                  SectionGenericData[cur].DisplayType,
-                                  SectionGenericData[cur].Check,
-                                  SectionGenericData[cur].Pattern );
+        ret |= ReadSection ( SectionGenericData[cur].name,
+                             fd,
+                             SectionGenericData[cur].Offset,
+                             SectionGenericData[cur].Size,
+                             SectionGenericData[cur].DisplayType,
+                             SectionGenericData[cur].Check,
+                             SectionGenericData[cur].Pattern );
         cur++;
     }
 
@@ -479,10 +479,10 @@ int CheckPerConsoleData ( FILE *fd ) {
     }
 
     GetSection ( fd, SectionTOC[asecure_loader].Offset + 0x40, 0x04, TYPE_HEX, buf );
-    ret = ret | ReadSection ( "metldr hdr", fd, SectionTOC[asecure_loader].Offset + 0x50, 0x04, TYPE_HEX + DISPLAY_FAIL, 1, buf );
+    ret |= ReadSection ( "metldr hdr", fd, SectionTOC[asecure_loader].Offset + 0x50, 0x04, TYPE_HEX + DISPLAY_FAIL, 1, buf );
 
     GetSection ( fd, SectionTOC[bootldr].Offset,               0x04, TYPE_HEX, buf );
-    ret = ret | ReadSection ( "Bootldr hdr", fd, SectionTOC[bootldr].Offset + 0x10, 0x04, TYPE_HEX + DISPLAY_FAIL, 1, buf );
+    ret |= ReadSection ( "Bootldr hdr", fd, SectionTOC[bootldr].Offset + 0x10, 0x04, TYPE_HEX + DISPLAY_FAIL, 1, buf );
 
     GetSection ( fd, SectionTOC[eEID].Offset + 0x77,           0x01, TYPE_HEX, IDPSTargetID );
     GetSection ( fd, SectionTOC[asecure_loader].Offset + 0x1E, 0x02, TYPE_HEX, metldrOffset0 );
@@ -592,7 +592,7 @@ int CheckFilledData ( FILE *fd ) {
             printf ( "Some error occured when checking '%s'\n", SectionFilled[cur].name );
         }
         cur++;
-        ret = ret | ret2;
+        ret |= ret2;
         ret2 = EXIT_SUCCESS;
     }
 
