@@ -177,7 +177,7 @@ static struct IndividualSystemData CheckPerSKU[] = {
 void MD5SumFileSection ( char *section_text, FILE *fd, uint32_t pos, uint32_t len ) {
     uint8_t digest[MD5_DIGEST_LENGTH];
     size_t read_len;
-    uint32_t cur;
+    int cur;
     uint32_t buf_len = 0x10;
     uint8_t buf[buf_len];
     MD5_CTX md5_ctx;
@@ -201,8 +201,7 @@ void MD5SumFileSection ( char *section_text, FILE *fd, uint32_t pos, uint32_t le
 }
 
 int ExtractSection ( char *section_name, FILE *src, uint32_t pos, uint32_t len ) {
-    uint32_t cur;
-    uint8_t *buf;
+    uint8_t *buf = NULL;
     FILE *dst;
 
     dst = fopen ( section_name, "wb" );
@@ -213,13 +212,12 @@ int ExtractSection ( char *section_name, FILE *src, uint32_t pos, uint32_t len )
 
     fseek ( src, pos, SEEK_SET );
 
-    if ( ( buf = malloc ( len + 1 ) ) )
+    if ( ( buf = malloc ( len + 1 ) ) != NULL )
         fread ( buf, len, 1, src );
     else
         return ( EXIT_FAILURE );
 
-    for ( cur = 0; cur < len; cur++ )
-        fputc ( buf[cur], dst );
+    fwrite ( buf, len, 1, dst );
 
     printf ( "Extraction done for %s\n", section_name );
 
@@ -231,10 +229,10 @@ int ExtractSection ( char *section_name, FILE *src, uint32_t pos, uint32_t len )
 
 void Statistics ( FILE *fd ) {
     // Calculate some statistics on bytes percentages
-    uint32_t cur;
-    uint16_t Counter;
+    int cur;
+    int Counter;
     uint32_t CountOthers = 0;
-    uint32_t CountByte[0xFF + 1];
+    uint32_t CountByte[0xFF + 1] = { 0 };
 
     char low[] = "Too Low";
     char high[] = "Too High";
@@ -250,12 +248,10 @@ void Statistics ( FILE *fd ) {
 
     fseek ( fd, 0, SEEK_SET );
 
-    for ( Counter = 0x00; Counter < 0xFF + 1; Counter++ )
-        CountByte[Counter] = 0;
-
     for ( cur = 0; cur < NOR_FILE_SIZE; cur++ )
-        CountByte[fgetc ( fd ) ] += 1;
+        CountByte[fgetc ( fd )] += 1;
 
+    /* wtf is this trying to do ??? */
     for ( Counter = 0x01; Counter < 0xFF; Counter++ ) {
         if ( CountOthers < CountByte[Counter] )
             CountOthers = CountByte[Counter];
@@ -294,7 +290,7 @@ void GetSection ( FILE *fd, uint32_t pos, uint32_t len, uint8_t type, char *sect
     //  uint8_t type          : Print out in Hex or ASCII
     //  uint8_t *section_data : Data to return
 
-    uint16_t cur;
+    int cur;
     *section_data = 0;
 
     fseek ( fd, pos, SEEK_SET );
@@ -321,8 +317,8 @@ int ReadSection ( char *section_name, FILE *fd, uint32_t pos, uint32_t len, uint
     //  uint8_t flag        : Check a given pattern
     //  uint8_t *pattern    : Pattern to check, has to be the same size of data read
 
-    uint8_t cur;
-    uint8_t ret = EXIT_SUCCESS;
+    int cur;
+    int ret = EXIT_SUCCESS;
     char buf[0x100] = { 0 };
 
     fseek ( fd, pos, SEEK_SET );
@@ -357,12 +353,13 @@ int ReadSection ( char *section_name, FILE *fd, uint32_t pos, uint32_t len, uint
             }
         }
     }
+
     return ( ret );
 }
 
 int CheckGenericData ( FILE *fd ) {
     int cur = 0;
-    uint8_t ret = EXIT_SUCCESS;
+    int ret = EXIT_SUCCESS;
     struct Sections SectionGenericData[] = {
         { "Flash Magic Number     ", SectionTOC[FlashStart].Offset + 0x10,    0x10, TYPE_HEX +   DISPLAY_FAIL, 1, "000000000FACE0FF00000000DEADBEEF" },
         { "Flash Format Type      ", SectionTOC[FlashFormat].Offset,          0x10, TYPE_HEX +   DISPLAY_FAIL, 1, "49464900000000010000000200000000" },
@@ -424,7 +421,7 @@ int CheckGenericData ( FILE *fd ) {
 int CheckPerConsoleData ( FILE *fd ) {
     int cur = 0;
     int SKUFound = 0;
-    uint8_t ret = EXIT_SUCCESS;
+    int ret = EXIT_SUCCESS;
 
     char *buf = malloc ( 0x100 );
     char *IDPSTargetID = malloc ( 3 );
@@ -526,8 +523,8 @@ int CheckPerConsoleData ( FILE *fd ) {
 int CheckFilledData ( FILE *fd ) {
     int cur = 0;
     int cur2 = 0;
-    uint8_t ret = EXIT_SUCCESS;
-    uint8_t ret2 = EXIT_SUCCESS;
+    int ret = EXIT_SUCCESS;
+    int ret2 = EXIT_SUCCESS;
     uint32_t bootldrSize;
     uint32_t bootldrFilledSize;
     uint32_t metldrSize;
@@ -605,15 +602,19 @@ int CheckFilledData ( FILE *fd ) {
 }
 
 int main ( int argc, char *argv[] ) {
-    uint8_t ret;
-    FILE *fd = NULL;
-    uint32_t len;
-    char *buf = malloc ( DATA_BUFFER_SIZE );
-    uint8_t cur;
+    int ret;
+    int cur;
     int type = 0;
-    struct Options Option[NB_OPTIONS];
-    uint32_t ExtractionSize;
+
     char DisplaySection[0x30] = { 0 };
+
+    uint32_t len;
+    uint32_t ExtractionSize;
+
+    FILE *fd = NULL;
+    char *buf = malloc ( DATA_BUFFER_SIZE );
+
+    struct Options Option[NB_OPTIONS];
 
     printf ( "******************************\n" );
     printf ( "*       NOR Dump Tool        *\n" );
