@@ -14,12 +14,14 @@
 // 0.9.1 Added -D option to display a specific section in Hex or ASCII
 // 0.9.0 First public release
 
-#include <sys/stat.h>
-#include <unistd.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <sys/stat.h>
+
 #include <openssl/md5.h>
 
 #ifdef __MINGW32__
