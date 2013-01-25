@@ -114,13 +114,13 @@ static struct Sections SectionTOC[] = {
 };
 
 struct IndividualSystemData{
-    char *IDPSTargetID;     // 0x02F077 (NOR) 0x80877 (NAND)
-    char *SKU;              //
-    char *metldrOffset0;    // 0x081E (NOR) 0x4081E (NAND)
-    char *metldrOffset1;    // 0x0842 (NOR) 0x40842 (NAND)
+    char *IDPSTargetID;    // 0x02F077 (NOR) 0x80877 (NAND)
+    char *SKU;             //
+    char *metldrOffset0;   // 0x081E (NOR) 0x4081E (NAND)
+    char *metldrOffset1;   // 0x0842 (NOR) 0x40842 (NAND)
     uint32_t bootldrSize;
-    char *bootldrOffset0;   // 0xFC0002 (NOR) 0x02 (NAND)
-    char *bootldrOffset1;   // 0xFC0012 (NOR) 0x12 (NAND)
+    char *bootldrOffset0;  // 0xFC0002 (NOR) 0x02 (NAND)
+    char *bootldrOffset1;  // 0xFC0012 (NOR) 0x12 (NAND)
     char *MinFW;
 };
 
@@ -194,7 +194,7 @@ void MD5SumFileSection ( char *section_text, FILE *fd, uint32_t pos, uint32_t le
     MD5_Final ( digest, &md5_ctx );
 
     printf ( "%s", section_text );
-    for ( i = 0;  i < MD5_DIGEST_LENGTH;  i++ )
+    for ( i = 0; i < MD5_DIGEST_LENGTH; i++ )
         printf ( "%02x", digest[i] );
 
     printf ( "\n" );
@@ -491,9 +491,9 @@ int CheckPerConsoleData ( FILE *fd ) {
 
     i = 0;
     while ( CheckPerSKU[i].IDPSTargetID != NULL ) {
-        if ( ( strcmp ( CheckPerSKU[i].IDPSTargetID, IDPSTargetID ) == 0 ) &&
-             ( strcmp ( CheckPerSKU[i].metldrOffset0, metldrOffset0 ) == 0 ) &&
-             ( strcmp ( CheckPerSKU[i].metldrOffset1, metldrOffset1 ) == 0 ) &&
+        if ( ( strcmp ( CheckPerSKU[i].IDPSTargetID,   IDPSTargetID ) == 0 ) &&
+             ( strcmp ( CheckPerSKU[i].metldrOffset0,  metldrOffset0 ) == 0 ) &&
+             ( strcmp ( CheckPerSKU[i].metldrOffset1,  metldrOffset1 ) == 0 ) &&
              ( strcmp ( CheckPerSKU[i].bootldrOffset0, bootldrOffset0 ) == 0 ) &&
              ( strcmp ( CheckPerSKU[i].bootldrOffset1, bootldrOffset1 ) == 0 ) ) {
             printf ( "PS3 SKU : %s minimum FW : %s ( item %d in list ) \n", CheckPerSKU[i].SKU, CheckPerSKU[i].MinFW, i );
@@ -537,11 +537,11 @@ int CheckFilledData ( FILE *fd ) {
     printf ( "* Area filled with 00 or FF  *\n" );
     printf ( "******************************\n" );
 
-    GetSection ( fd, SectionTOC[asecure_loader].Offset + 0x42, 0x02, TYPE_HEX, metldrOffset0 );    
+    GetSection ( fd, SectionTOC[asecure_loader].Offset + 0x42, 0x02, TYPE_HEX, metldrOffset0 );
     metldrSize = ( strtol ( metldrOffset0, NULL, 16 ) ) * 0x10 + 0x40;
     metldrFilledSize = 0x2F000 - metldrSize - SectionTOC[asecure_loader].Offset - 0x40;
 
-    GetSection ( fd, SectionTOC[bootldr].Offset + 0x02, 0x02, TYPE_HEX, bootldrOffset0 );    
+    GetSection ( fd, SectionTOC[bootldr].Offset + 0x02, 0x02, TYPE_HEX, bootldrOffset0 );
     bootldrSize = ( strtol ( bootldrOffset0, NULL, 16 ) ) * 0x10 + 0x40;
     bootldrFilledSize = 0x1000000 - bootldrSize - SectionTOC[bootldr].Offset;
 
@@ -590,6 +590,7 @@ int CheckFilledData ( FILE *fd ) {
         else {
             printf ( "Some error occured when checking '%s'\n", SectionFilled[i].name );
         }
+
         i++;
         ret |= ret2;
         ret2 = EXIT_SUCCESS;
@@ -654,26 +655,32 @@ int main ( int argc, char *argv[] ) {
             type = type + OPTION_SPLIT;
             Option[0].Name = argv[i + 1];
         }
+
         if ( strcmp ( argv[i], "-M" ) == 0 ) {
             type = type + OPTION_MD5;
             Option[1].Start = strtol ( argv[i + 1], NULL, 0 );
             Option[1].Size = strtol ( argv[i + 2], NULL, 0 );
         }
+
         if ( strcmp ( argv[i], "-E" ) == 0 ) {
             type = type + OPTION_EXTRACT;
             Option[2].Name = argv[i + 1];
             Option[2].Start = strtol ( argv[i + 2], NULL, 0 );
             Option[2].Size = strtol ( argv[i + 3], NULL, 0 );
         }
+
         if ( strcmp ( argv[i], "-P" ) == 0 ) {
             type = type + OPTION_STATS;
         }
+
         if ( strcmp ( argv[i], "-G" ) == 0 ) {
             type = type + OPTION_CHECK_GENERIC;
         }
+
         if ( strcmp ( argv[i], "-C" ) == 0 ) {
             type = type + OPTION_CHECK_PERPS3;
         }
+
         if ( strcmp ( argv[i], "-D" ) == 0 ) {
             type = type + OPTION_DISPLAY_AREA;
             Option[6].Start = strtol ( argv[i + 1], NULL, 0 );
@@ -689,6 +696,7 @@ int main ( int argc, char *argv[] ) {
             else
                 Option[6].Type = TYPE_HEX + DISPLAY_ALWAYS;
         }
+
         if ( strcmp ( argv[i], "-F" ) == 0 ) {
             type = type + OPTION_CHECK_FILLED;
         }
@@ -717,8 +725,11 @@ int main ( int argc, char *argv[] ) {
             printf ( "Failed to use folder %s\n", Option[0].Name );
             return ( EXIT_FAILURE );
         }
+
         GetSection ( fd, SectionTOC[asecure_loader].Offset + 0x18, 0x08, TYPE_HEX, buf );
+
         ExtractionSize = strtol ( buf, NULL, 16 );
+
         ret = ExtractSection ( "asecure_loader",   fd, SectionTOC[asecure_loader].Offset + 0x40, ExtractionSize );
         ret = ExtractSection ( "eEID",             fd, SectionTOC[eEID].Offset,                  SectionTOC[eEID].Size );
         ret = ExtractSection ( "cISD",             fd, SectionTOC[cISD].Offset,                  SectionTOC[cISD].Size );
