@@ -177,7 +177,7 @@ static struct IndividualSystemData CheckPerSKU[] = {
 void MD5SumFileSection ( char *section_text, FILE *fd, uint32_t pos, uint32_t len ) {
     uint8_t digest[MD5_DIGEST_LENGTH];
     size_t read_len;
-    int cur;
+    int i;
     uint32_t buf_len = 0x10;
     uint8_t buf[buf_len];
     MD5_CTX md5_ctx;
@@ -186,7 +186,7 @@ void MD5SumFileSection ( char *section_text, FILE *fd, uint32_t pos, uint32_t le
 
     fseek ( fd, pos, SEEK_SET );
 
-    for ( cur = 0; cur < NOR_FILE_SIZE; cur += buf_len ) {
+    for ( i = 0; i < NOR_FILE_SIZE; i += buf_len ) {
         read_len = fread ( buf, 1, buf_len, fd );
         MD5_Update ( &md5_ctx, buf, read_len );
     }
@@ -194,8 +194,8 @@ void MD5SumFileSection ( char *section_text, FILE *fd, uint32_t pos, uint32_t le
     MD5_Final ( digest, &md5_ctx );
 
     printf ( "%s", section_text );
-    for ( cur = 0;  cur < MD5_DIGEST_LENGTH;  cur++ )
-        printf ( "%02x", digest[cur] );
+    for ( i = 0;  i < MD5_DIGEST_LENGTH;  i++ )
+        printf ( "%02x", digest[i] );
 
     printf ( "\n" );
 }
@@ -229,7 +229,7 @@ int ExtractSection ( char *section_name, FILE *src, uint32_t pos, uint32_t len )
 
 void Statistics ( FILE *fd ) {
     // Calculate some statistics on bytes percentages
-    int cur;
+    int i;
     int Counter;
     uint32_t CountOthers = 0;
     uint32_t CountByte[0xFF + 1] = { 0 };
@@ -248,7 +248,7 @@ void Statistics ( FILE *fd ) {
 
     fseek ( fd, 0, SEEK_SET );
 
-    for ( cur = 0; cur < NOR_FILE_SIZE; cur++ )
+    for ( i = 0; i < NOR_FILE_SIZE; i++ )
         CountByte[fgetc ( fd )] += 1;
 
     /* wtf is this trying to do ??? */
@@ -290,13 +290,13 @@ void GetSection ( FILE *fd, uint32_t pos, uint32_t len, uint8_t type, char *sect
     //  uint8_t type          : Print out in Hex or ASCII
     //  uint8_t *section_data : Data to return
 
-    int cur;
+    int i;
     *section_data = 0;
 
     fseek ( fd, pos, SEEK_SET );
 
     if ( ( ( type ) & ( 1 << 0 ) ) == TYPE_HEX ) {
-        for ( cur = 0; cur < len; cur++ ) {
+        for ( i = 0; i < len; i++ ) {
             sprintf ( section_data, "%s%02X", section_data, fgetc ( fd ) );
         }
     }
@@ -317,13 +317,13 @@ int ReadSection ( char *section_name, FILE *fd, uint32_t pos, uint32_t len, uint
     //  uint8_t flag        : Check a given pattern
     //  uint8_t *pattern    : Pattern to check, has to be the same size of data read
 
-    int cur;
+    int i;
     int ret = EXIT_SUCCESS;
     char buf[0x100] = { 0 };
 
     fseek ( fd, pos, SEEK_SET );
 
-    for ( cur = 0; cur < len; cur++ ) {
+    for ( i = 0; i < len; i++ ) {
         if ( ( ( type ) & ( 1 << 0 ) ) == TYPE_HEX )
             sprintf ( buf, "%s%02X", buf, fgetc ( fd ) );
         else if ( ( ( type ) & ( 1 << 0 ) ) == TYPE_ASCII )
@@ -334,9 +334,9 @@ int ReadSection ( char *section_name, FILE *fd, uint32_t pos, uint32_t len, uint
         printf ( "Section: %s: read %s \n", section_name, buf );
 
     if ( flag ) {
-        for ( cur = 0; cur < len; cur++ ) {
+        for ( i = 0; i < len; i++ ) {
             if ( ( ( type ) & ( 1 << 0 ) ) == TYPE_ASCII ) {
-                if ( buf[cur] != pattern[cur] ) {
+                if ( buf[i] != pattern[i] ) {
                     ret = EXIT_FAILURE;
                     if ( ( ( type ) & ( 1 << 2 ) ) == DISPLAY_FAIL )
                         printf ( "Section: %s: read %s !   mismatch pattern '%s' !\n", section_name, buf, pattern );
@@ -344,7 +344,7 @@ int ReadSection ( char *section_name, FILE *fd, uint32_t pos, uint32_t len, uint
                 }
             }
             else if ( ( ( type ) & ( 1 << 0 ) ) == TYPE_HEX ) {
-                if ( ( buf[cur * 2] != pattern[cur * 2] ) || ( buf[cur * 2 + 1] != pattern[cur * 2 + 1] ) ) {
+                if ( ( buf[i * 2] != pattern[i * 2] ) || ( buf[i * 2 + 1] != pattern[i * 2 + 1] ) ) {
                     ret = EXIT_FAILURE;
                     if ( ( ( type ) & ( 1 << 2 ) ) == DISPLAY_FAIL )
                         printf ( "Section: %s: read %s !   mismatch pattern '%s' !\n", section_name, buf, pattern );
@@ -358,7 +358,7 @@ int ReadSection ( char *section_name, FILE *fd, uint32_t pos, uint32_t len, uint
 }
 
 int CheckGenericData ( FILE *fd ) {
-    int cur = 0;
+    int i = 0;
     int ret = EXIT_SUCCESS;
     struct Sections SectionGenericData[] = {
         { "Flash Magic Number     ", SectionTOC[FlashStart].Offset + 0x10,    0x10, TYPE_HEX +   DISPLAY_FAIL, 1, "000000000FACE0FF00000000DEADBEEF" },
@@ -404,22 +404,22 @@ int CheckGenericData ( FILE *fd ) {
     printf ( "******************************\n" );
     printf ( "*        Generic Data        *\n" );
     printf ( "******************************\n" );
-    while ( SectionGenericData[cur].name != NULL ) {
-        ret |= ReadSection ( SectionGenericData[cur].name,
+    while ( SectionGenericData[i].name != NULL ) {
+        ret |= ReadSection ( SectionGenericData[i].name,
                              fd,
-                             SectionGenericData[cur].Offset,
-                             SectionGenericData[cur].Size,
-                             SectionGenericData[cur].DisplayType,
-                             SectionGenericData[cur].Check,
-                             SectionGenericData[cur].Pattern );
-        cur++;
+                             SectionGenericData[i].Offset,
+                             SectionGenericData[i].Size,
+                             SectionGenericData[i].DisplayType,
+                             SectionGenericData[i].Check,
+                             SectionGenericData[i].Pattern );
+        i++;
     }
 
     return ( ret );
 }
 
 int CheckPerConsoleData ( FILE *fd ) {
-    int cur = 0;
+    int i = 0;
     int SKUFound = 0;
     int ret = EXIT_SUCCESS;
 
@@ -466,15 +466,15 @@ int CheckPerConsoleData ( FILE *fd ) {
     printf ( "*      Per Console Data      *\n" );
     printf ( "******************************\n" );
 
-    while ( SectionPerConsole[cur].name != NULL ) {
-        ret= ret | ReadSection ( SectionPerConsole[cur].name,
+    while ( SectionPerConsole[i].name != NULL ) {
+        ret= ret | ReadSection ( SectionPerConsole[i].name,
                                  fd,
-                                 SectionPerConsole[cur].Offset,
-                                 SectionPerConsole[cur].Size,
-                                 SectionPerConsole[cur].DisplayType,
-                                 SectionPerConsole[cur].Check,
-                                 SectionPerConsole[cur].Pattern );
-        cur++;
+                                 SectionPerConsole[i].Offset,
+                                 SectionPerConsole[i].Size,
+                                 SectionPerConsole[i].DisplayType,
+                                 SectionPerConsole[i].Check,
+                                 SectionPerConsole[i].Pattern );
+        i++;
     }
 
     GetSection ( fd, SectionTOC[asecure_loader].Offset + 0x40, 0x04, TYPE_HEX, buf );
@@ -489,17 +489,17 @@ int CheckPerConsoleData ( FILE *fd ) {
     GetSection ( fd, SectionTOC[bootldr].Offset + 0x02,        0x02, TYPE_HEX, bootldrOffset0 );
     GetSection ( fd, SectionTOC[bootldr].Offset + 0x12,        0x02, TYPE_HEX, bootldrOffset1 );
 
-    cur = 0;
-    while ( CheckPerSKU[cur].IDPSTargetID != NULL ) {
-        if ( ( strcmp ( CheckPerSKU[cur].IDPSTargetID, IDPSTargetID ) == 0 ) &&
-             ( strcmp ( CheckPerSKU[cur].metldrOffset0, metldrOffset0 ) == 0 ) &&
-             ( strcmp ( CheckPerSKU[cur].metldrOffset1, metldrOffset1 ) == 0 ) &&
-             ( strcmp ( CheckPerSKU[cur].bootldrOffset0, bootldrOffset0 ) == 0 ) &&
-             ( strcmp ( CheckPerSKU[cur].bootldrOffset1, bootldrOffset1 ) == 0 ) ) {
-            printf ( "PS3 SKU : %s minimum FW : %s ( item %d in list ) \n", CheckPerSKU[cur].SKU, CheckPerSKU[cur].MinFW, cur );
+    i = 0;
+    while ( CheckPerSKU[i].IDPSTargetID != NULL ) {
+        if ( ( strcmp ( CheckPerSKU[i].IDPSTargetID, IDPSTargetID ) == 0 ) &&
+             ( strcmp ( CheckPerSKU[i].metldrOffset0, metldrOffset0 ) == 0 ) &&
+             ( strcmp ( CheckPerSKU[i].metldrOffset1, metldrOffset1 ) == 0 ) &&
+             ( strcmp ( CheckPerSKU[i].bootldrOffset0, bootldrOffset0 ) == 0 ) &&
+             ( strcmp ( CheckPerSKU[i].bootldrOffset1, bootldrOffset1 ) == 0 ) ) {
+            printf ( "PS3 SKU : %s minimum FW : %s ( item %d in list ) \n", CheckPerSKU[i].SKU, CheckPerSKU[i].MinFW, i );
             SKUFound = 1;
         }
-        cur++;
+        i++;
     }
 
     if ( !SKUFound ) {
@@ -521,8 +521,8 @@ int CheckPerConsoleData ( FILE *fd ) {
 }
 
 int CheckFilledData ( FILE *fd ) {
-    int cur = 0;
-    int cur2 = 0;
+    int i = 0;
+    int j = 0;
     int ret = EXIT_SUCCESS;
     int ret2 = EXIT_SUCCESS;
     uint32_t bootldrSize;
@@ -572,25 +572,25 @@ int CheckFilledData ( FILE *fd ) {
         { NULL, 0, 0, 0, 0, NULL }
     };
 
-    while ( SectionFilled[cur].name != NULL ) {
-        for ( cur2 = 0; cur2 < SectionFilled[cur].Size; cur2++ ) {
-            if ( ( ret2 = ReadSection ( SectionFilled[cur].name,
+    while ( SectionFilled[i].name != NULL ) {
+        for ( j = 0; j < SectionFilled[i].Size; j++ ) {
+            if ( ( ret2 = ReadSection ( SectionFilled[i].name,
                                         fd,
-                                        SectionFilled[cur].Offset + cur2,
+                                        SectionFilled[i].Offset + j,
                                         1,
-                                        SectionFilled[cur].DisplayType,
-                                        SectionFilled[cur].Check,
-                                        SectionFilled[cur].Pattern ) ) ) {
-                printf ( "Error at '0x%08X\n", SectionFilled[cur].Offset + cur2 );
+                                        SectionFilled[i].DisplayType,
+                                        SectionFilled[i].Check,
+                                        SectionFilled[i].Pattern ) ) ) {
+                printf ( "Error at '0x%08X\n", SectionFilled[i].Offset + j );
             }
         }
         if ( !ret2 ) {
-            printf ( "Succesfully checked '%s' From '0x%08X' size: '0x%08X' full of '0x%s'\n", SectionFilled[cur].name, SectionFilled[cur].Offset, SectionFilled[cur].Size, SectionFilled[cur].Pattern );
+            printf ( "Succesfully checked '%s' From '0x%08X' size: '0x%08X' full of '0x%s'\n", SectionFilled[i].name, SectionFilled[i].Offset, SectionFilled[i].Size, SectionFilled[i].Pattern );
         }
         else {
-            printf ( "Some error occured when checking '%s'\n", SectionFilled[cur].name );
+            printf ( "Some error occured when checking '%s'\n", SectionFilled[i].name );
         }
-        cur++;
+        i++;
         ret |= ret2;
         ret2 = EXIT_SUCCESS;
     }
@@ -603,7 +603,7 @@ int CheckFilledData ( FILE *fd ) {
 
 int main ( int argc, char *argv[] ) {
     int ret;
-    int cur;
+    int i;
     int type = 0;
 
     char DisplaySection[0x30] = { 0 };
@@ -648,40 +648,40 @@ int main ( int argc, char *argv[] ) {
         type = OPTION_STATS + OPTION_CHECK_GENERIC + OPTION_CHECK_PERPS3 + OPTION_CHECK_FILLED;
     }
 
-    for ( cur = 1; cur < argc; cur++ )
+    for ( i = 1; i < argc; i++ )
     {
-        if ( strcmp ( argv[cur], "-S" ) == 0 ) {
+        if ( strcmp ( argv[i], "-S" ) == 0 ) {
             type = type + OPTION_SPLIT;
-            Option[0].Name = argv[cur + 1];
+            Option[0].Name = argv[i + 1];
         }
-        if ( strcmp ( argv[cur], "-M" ) == 0 ) {
+        if ( strcmp ( argv[i], "-M" ) == 0 ) {
             type = type + OPTION_MD5;
-            Option[1].Start = strtol ( argv[cur + 1], NULL, 0 );
-            Option[1].Size = strtol ( argv[cur + 2], NULL, 0 );
+            Option[1].Start = strtol ( argv[i + 1], NULL, 0 );
+            Option[1].Size = strtol ( argv[i + 2], NULL, 0 );
         }
-        if ( strcmp ( argv[cur], "-E" ) == 0 ) {
+        if ( strcmp ( argv[i], "-E" ) == 0 ) {
             type = type + OPTION_EXTRACT;
-            Option[2].Name = argv[cur + 1];
-            Option[2].Start = strtol ( argv[cur + 2], NULL, 0 );
-            Option[2].Size = strtol ( argv[cur + 3], NULL, 0 );
+            Option[2].Name = argv[i + 1];
+            Option[2].Start = strtol ( argv[i + 2], NULL, 0 );
+            Option[2].Size = strtol ( argv[i + 3], NULL, 0 );
         }
-        if ( strcmp ( argv[cur], "-P" ) == 0 ) {
+        if ( strcmp ( argv[i], "-P" ) == 0 ) {
             type = type + OPTION_STATS;
         }
-        if ( strcmp ( argv[cur], "-G" ) == 0 ) {
+        if ( strcmp ( argv[i], "-G" ) == 0 ) {
             type = type + OPTION_CHECK_GENERIC;
         }
-        if ( strcmp ( argv[cur], "-C" ) == 0 ) {
+        if ( strcmp ( argv[i], "-C" ) == 0 ) {
             type = type + OPTION_CHECK_PERPS3;
         }
-        if ( strcmp ( argv[cur], "-D" ) == 0 ) {
+        if ( strcmp ( argv[i], "-D" ) == 0 ) {
             type = type + OPTION_DISPLAY_AREA;
-            Option[6].Start = strtol ( argv[cur + 1], NULL, 0 );
-            Option[6].Size = strtol ( argv[cur + 2], NULL, 0 );
-            if ( argc != cur + 3 ) {
-                if ( strcmp ( argv[cur + 3], "H" ) == 0 )
+            Option[6].Start = strtol ( argv[i + 1], NULL, 0 );
+            Option[6].Size = strtol ( argv[i + 2], NULL, 0 );
+            if ( argc != i + 3 ) {
+                if ( strcmp ( argv[i + 3], "H" ) == 0 )
                     Option[6].Type = TYPE_HEX + DISPLAY_ALWAYS;
-                else if ( strcmp ( argv[cur + 3], "A" ) == 0 )
+                else if ( strcmp ( argv[i + 3], "A" ) == 0 )
                     Option[6].Type = TYPE_ASCII + DISPLAY_ALWAYS;
                 else
                     Option[6].Type = TYPE_HEX + DISPLAY_ALWAYS;
@@ -689,7 +689,7 @@ int main ( int argc, char *argv[] ) {
             else
                 Option[6].Type = TYPE_HEX + DISPLAY_ALWAYS;
         }
-        if ( strcmp ( argv[cur], "-F" ) == 0 ) {
+        if ( strcmp ( argv[i], "-F" ) == 0 ) {
             type = type + OPTION_CHECK_FILLED;
         }
     }
